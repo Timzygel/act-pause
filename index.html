@@ -2,87 +2,156 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>ACT Pause</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ACT-Pause</title>
 <style>
-  * { box-sizing: border-box; margin:0; padding:0; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
+    margin: 0; padding: 0; min-height: 100vh;
+    background: linear-gradient(135deg, #2c3e50, #4a6785);
     font-family: -apple-system, sans-serif;
-    background: linear-gradient(135deg,#2c3e50,#4a6d8c);
-    color: #fff;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 24px;
-    text-align: center;
+    color: #fff; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px; text-align: center;
   }
-  #card {
-    background: rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 32px 24px;
-    max-width: 380px;
-    min-height: 240px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  h1 { font-size: 1.3em; opacity: 0.8; margin-bottom: 30px; font-weight: 300; }
+  #satz {
+    font-size: 1.5em; line-height: 1.5; margin: 20px 0 40px;
+    min-height: 120px; display: flex; align-items: center;
+    justify-content: center; padding: 0 10px;
   }
-  h2 { font-size: 1.1em; opacity: 0.7; margin-bottom: 16px; font-weight: 400; }
-  p { font-size: 1.3em; line-height: 1.5; }
-  button {
-    margin-top: 32px;
-    background: #fff;
-    color: #2c3e50;
-    border: none;
-    padding: 14px 32px;
-    border-radius: 30px;
-    font-size: 1em;
-    font-weight: 600;
+  .btn {
+    background: rgba(255,255,255,0.15); border: none; color: #fff;
+    padding: 16px 32px; font-size: 1.1em; border-radius: 30px;
+    margin: 8px; cursor: pointer; backdrop-filter: blur(10px);
   }
-  #timer { margin-top: 12px; font-size: 0.9em; opacity: 0.6; }
+  .btn:active { background: rgba(255,255,255,0.3); }
+  .btn-small { font-size: 0.9em; padding: 10px 20px; opacity: 0.7; }
+  #atem-screen, #haupt-screen { width: 100%; max-width: 500px; }
+  #atem-screen { display: none; }
+  #kreis {
+    width: 150px; height: 150px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.5);
+    margin: 30px auto; display: flex; align-items: center;
+    justify-content: center; font-size: 3em; transition: transform 4s ease-in-out;
+  }
+  .ein { transform: scale(1.3); }
+  #zaehltext { font-size: 1.1em; opacity: 0.8; margin-top: 20px; min-height: 60px; }
+  .nav { position: fixed; bottom: 20px; display: flex; gap: 10px; }
 </style>
 </head>
 <body>
 
-<div id="card">
-  <h2 id="label">Kurze ACT-Pause</h2>
-  <p id="text">Tippe auf Start</p>
-  <div id="timer"></div>
+<div id="haupt-screen">
+  <h1>Ein Moment für dich</h1>
+  <div id="satz">Tippe für einen Impuls</div>
+  <button class="btn" onclick="neuerSatz()">Nächster Gedanke</button>
+  <br>
+  <button class="btn btn-small" onclick="zeigeAtem()">10 Atemzüge zählen</button>
 </div>
-<button onclick="neueUebung()">Start</button>
+
+<div id="atem-screen">
+  <h1>Atembeobachtung</h1>
+  <div id="kreis">0</div>
+  <div id="zaehltext">Bereit? Tippe auf Start.</div>
+  <button class="btn" id="atemBtn" onclick="startAtem()">Start</button>
+  <br>
+  <button class="btn btn-small" onclick="zeigeHaupt()">Zurück</button>
+</div>
 
 <script>
-const uebungen = [
-  {label:"Defusion", text:"Sag innerlich: 'Ich bemerke, dass ich gerade denke...' – und benenne den Gedanken. Lass ihn wie eine Wolke vorbeiziehen."},
-  {label:"Erdung", text:"Spüre deine Füße auf dem Boden. Drei bewusste Atemzüge. Nimm 3 Dinge wahr, die du siehst."},
-  {label:"Werte-Check", text:"Frage dich: Was ist mir JETZT, in dieser Minute, wirklich wichtig? Nicht was 'sollte' – was zählt für mich?"},
-  {label:"Beobachter-Ich", text:"Stell dir vor, du beobachtest deine Gedanken von außen, wie Schilder, die vorbeifahren. Du bist nicht der Gedanke."},
-  {label:"Akzeptanz", text:"Falls Unruhe da ist: lass sie da sein, ohne sie wegzudrücken. Sie darf bleiben – du musst nicht kämpfen."},
-  {label:"Container-Übung", text:"Stell dir vor, du packst die unerledigte Aufgabe kurz in eine Box. Sie ist sicher verwahrt – du holst sie später wieder raus."},
-  {label:"Hier & Jetzt", text:"Was höre ich gerade? Was rieche ich? Was spüre ich an meiner Haut? Komm für 20 Sekunden ganz an."}
+const saetze = [
+  // Ausgangs-Set (ACT-Grundlagen)
+  "Ist dieser Gedanke wahr — oder ist er hilfreich?",
+  "Ich bemerke, dass ich gerade den Gedanken habe, dass...",
+  "Das sind einfach Wörter, die mein Gehirn gerade generiert.",
+  "Was würde mein nicht-ängstliches Ich jetzt tun?",
+  "Kann ich diesem Gefühl gerade etwas Raum geben, ohne es wegzudrücken?",
+  "Zurück zu meinen Werten — was ist mir hier eigentlich wichtig?",
+  "Trete in effektive Aktion — auch ein kleiner Schritt zählt.",
+  "Fünf Dinge wahrnehmen: was sehe, höre, spüre ich gerade?",
+  "Nicht der Kampf gegen den Gedanken zählt — sondern ob ich aussteige.",
+  "Auch das Bittere darf da sein. Ich bin trotzdem Autor meines Lebens.",
+
+  // Neu ergänzt
+  "Vielen Dank, lieber Verstand. Wie aufschlussreich!",
+  "Unerhört langsam. Lächerlich langsam.",
+  "Kampf-Schalter aus?",
+  "Stell dir den Gedanken auf einem entfernten Bildschirm vor — klein, schwarz-weiß.",
+  "Trag den Gedanken innerlich mit einer lächerlichen Stimme vor.",
+  "Welchen Titel würde diese Gedanken-Geschichte tragen?",
+  "Die Angst in dieser Situation ist vielleicht ein Hinweis auf einen Wert.",
+  "Ist das gerade eine Katastrophen-Geschichte oder eine Lösungs-Idee?",
+  "Wo vermeide ich gerade eine Entscheidung?",
+  "Ich bin ein Mensch mit Stärken und Schwächen — das reicht.",
+  "Es gibt keinen Sieg im Kampf um den Selbstwert. Nur Aussteigen."
 ];
 
-function neueUebung(){
-  const u = uebungen[Math.floor(Math.random()*uebungen.length)];
-  document.getElementById('label').innerText = u.label;
-  document.getElementById('text').innerText = u.text;
-  starteTimer(60);
+let letzterIndex = -1;
+
+function neuerSatz() {
+  let idx;
+  do {
+    idx = Math.floor(Math.random() * saetze.length);
+  } while (idx === letzterIndex && saetze.length > 1);
+  letzterIndex = idx;
+  document.getElementById('satz').textContent = saetze[idx];
 }
 
-let intervall;
-function starteTimer(sek){
-  clearInterval(intervall);
-  let t = sek;
-  const el = document.getElementById('timer');
-  el.innerText = t + "s";
-  intervall = setInterval(()=>{
-    t--;
-    el.innerText = t > 0 ? t + "s" : "Fertig ✓";
-    if(t<=0) clearInterval(intervall);
-  },1000);
+function zeigeAtem() {
+  document.getElementById('haupt-screen').style.display = 'none';
+  document.getElementById('atem-screen').style.display = 'block';
+  resetAtem();
+}
+
+function zeigeHaupt() {
+  document.getElementById('atem-screen').style.display = 'none';
+  document.getElementById('haupt-screen').style.display = 'block';
+}
+
+let atemZaehler = 0;
+let atemLaeuft = false;
+
+function resetAtem() {
+  atemZaehler = 0;
+  atemLaeuft = false;
+  document.getElementById('kreis').textContent = '0';
+  document.getElementById('kreis').classList.remove('ein');
+  document.getElementById('zaehltext').textContent = 'Bereit? Tippe auf Start.';
+  document.getElementById('atemBtn').textContent = 'Start';
+  document.getElementById('atemBtn').onclick = startAtem;
+}
+
+function startAtem() {
+  if (atemLaeuft) return;
+  atemLaeuft = true;
+  atemZaehler = 0;
+  document.getElementById('atemBtn').style.display = 'none';
+  atemZyklus();
+}
+
+function atemZyklus() {
+  if (atemZaehler >= 10) {
+    document.getElementById('zaehltext').textContent = 'Gut gemacht. Zehn Atemzüge — einfach beobachtet.';
+    document.getElementById('kreis').textContent = '✓';
+    document.getElementById('kreis').classList.remove('ein');
+    document.getElementById('atemBtn').style.display = 'inline-block';
+    document.getElementById('atemBtn').textContent = 'Nochmal';
+    document.getElementById('atemBtn').onclick = () => { resetAtem(); document.getElementById('atemBtn').style.display='inline-block'; };
+    atemLaeuft = false;
+    return;
+  }
+
+  atemZaehler++;
+  document.getElementById('kreis').textContent = atemZaehler;
+  document.getElementById('zaehltext').textContent = 'Einatmen...';
+  document.getElementById('kreis').classList.add('ein');
+
+  setTimeout(() => {
+    document.getElementById('zaehltext').textContent = 'Ausatmen...';
+    document.getElementById('kreis').classList.remove('ein');
+    setTimeout(atemZyklus, 4000);
+  }, 4000);
 }
 </script>
 
