@@ -14,9 +14,9 @@
     align-items: center; justify-content: center;
     padding: 20px; text-align: center;
   }
-  h1 { font-size: 1.3em; opacity: 0.8; margin-bottom: 30px; font-weight: 300; }
+  h1 { font-size: 1.3em; opacity: 0.8; margin-bottom: 20px; font-weight: 300; }
   #satz {
-    font-size: 1.5em; line-height: 1.5; margin: 20px 0 40px;
+    font-size: 1.5em; line-height: 1.5; margin: 20px 0 20px;
     min-height: 120px; display: flex; align-items: center;
     justify-content: center; padding: 0 10px;
   }
@@ -27,8 +27,21 @@
   }
   .btn:active { background: rgba(255,255,255,0.3); }
   .btn-small { font-size: 0.9em; padding: 10px 20px; opacity: 0.7; }
-  #atem-screen, #haupt-screen { width: 100%; max-width: 500px; }
+  #haupt-screen, #atem-screen { width: 100%; max-width: 500px; }
   #atem-screen { display: none; }
+
+  /* Denkzeit-Kreis */
+  #denkzeit-wrap { display: none; margin: 10px auto 20px; }
+  #denkzeit-svg { transform: rotate(-90deg); }
+  #denkzeit-kreis-bg { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 6; }
+  #denkzeit-kreis-fg {
+    fill: none; stroke: #fff; stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 314; stroke-dashoffset: 0;
+  }
+  #denkzeit-text {
+    position: relative; margin-top: -95px; font-size: 1.4em; opacity: 0.9;
+  }
+
   #kreis {
     width: 150px; height: 150px; border-radius: 50%;
     border: 3px solid rgba(255,255,255,0.5);
@@ -44,10 +57,20 @@
 
 <div id="haupt-screen">
   <h1>Ein Moment für dich</h1>
-  <div id="satz">Tippe für einen Impuls</div>
-  <button class="btn" onclick="neuerSatz()">Nächster Gedanke</button>
-  <br>
-  <button class="btn btn-small" onclick="zeigeAtem()">10 Atemzüge zählen</button>
+  <div id="satz">Tippe auf „Neuer Satz“</div>
+
+  <div id="denkzeit-wrap">
+    <svg id="denkzeit-svg" width="100" height="100" viewBox="0 0 100 100">
+      <circle id="denkzeit-kreis-bg" cx="50" cy="50" r="50"></circle>
+      <circle id="denkzeit-kreis-fg" cx="50" cy="50" r="50"></circle>
+    </svg>
+    <div id="denkzeit-text">60</div>
+  </div>
+
+  <div>
+    <button class="btn" onclick="neuerSatz()">Neuer Satz</button>
+    <button class="btn" onclick="starteDenkzeit()">60 Sek. Denkzeit</button>
+  </div>
 </div>
 
 <div id="atem-screen">
@@ -55,69 +78,132 @@
   <div id="kreis">0</div>
   <div id="zaehltext">Bereit? Tippe auf Start.</div>
   <button class="btn" id="atemBtn" onclick="startAtem()">Start</button>
-  <br>
-  <button class="btn btn-small" onclick="zeigeHaupt()">Zurück</button>
+</div>
+
+<div class="nav">
+  <button class="btn btn-small" onclick="zeigeHaupt()">Sätze</button>
+  <button class="btn btn-small" onclick="zeigeAtem()">Atmen (10x)</button>
 </div>
 
 <script>
 const saetze = [
   // Ausgangs-Set (ACT-Grundlagen)
-  "Ist dieser Gedanke wahr — oder ist er hilfreich?",
-  "Ich bemerke, dass ich gerade den Gedanken habe, dass...",
-  "Das sind einfach Wörter, die mein Gehirn gerade generiert.",
-  "Was würde mein nicht-ängstliches Ich jetzt tun?",
-  "Kann ich diesem Gefühl gerade etwas Raum geben, ohne es wegzudrücken?",
-  "Zurück zu meinen Werten — was ist mir hier eigentlich wichtig?",
-  "Trete in effektive Aktion — auch ein kleiner Schritt zählt.",
-  "Fünf Dinge wahrnehmen: was sehe, höre, spüre ich gerade?",
-  "Nicht der Kampf gegen den Gedanken zählt — sondern ob ich aussteige.",
-  "Auch das Bittere darf da sein. Ich bin trotzdem Autor meines Lebens.",
-
-  // Neu ergänzt
+  "Akzeptiere Gedanken und Gefühle und verbinde dich mit dem Moment.",
+  "Comeback zu meinen Werten.",
+  "Trete in effektive Aktion.",
+  "Kann ich mich anderswo, z.B. in der Schule, zu Hause fühlen? Sicher fühlen?",
+  "Was würde mein nichtängstliches Ich machen?",
+  "Langsamer machen. Unerhört langsam. Lächerlich langsam.",
+  "Ich habe den Gedanken, dass …",
   "Vielen Dank, lieber Verstand. Wie aufschlussreich!",
-  "Unerhört langsam. Lächerlich langsam.",
-  "Kampf-Schalter aus?",
-  "Stell dir den Gedanken auf einem entfernten Bildschirm vor — klein, schwarz-weiß.",
-  "Trag den Gedanken innerlich mit einer lächerlichen Stimme vor.",
-  "Welchen Titel würde diese Gedanken-Geschichte tragen?",
-  "Die Angst in dieser Situation ist vielleicht ein Hinweis auf einen Wert.",
-  "Ist das gerade eine Katastrophen-Geschichte oder eine Lösungs-Idee?",
-  "Wo vermeide ich gerade eine Entscheidung?",
-  "Ich bin ein Mensch mit Stärken und Schwächen — das reicht.",
-  "Es gibt keinen Sieg im Kampf um den Selbstwert. Nur Aussteigen."
+  "Die Grundfrage ist nicht, ob ein Gedanke richtig ist, sondern ob er hilfreich ist.",
+  "Es sind einfach Wörter, die mein Gehirn generiert.",
+  "Werde ich in diesem Moment das Süße wie auch das Bittere akzeptieren?",
+  "Werde ich Geschichten vom Möglichen leichtnehmen?",
+  "Werde ich Autor oder Autorin meines eigenen Lebens sein?",
+  "Kehre ich, wenn ich abschweife, freundlich lächelnd zurück?",
+  "Fünf Dinge wahrnehmen: Gegenstände, Klänge, Körperoberfläche.",
+  "Verbinde dich ganz mit deiner Morgenroutine.",
+  "Wenn Gedanken abschweifen: innerlich „denken“ sagen und zurückkehren.",
+  "Verbindung mit der Tätigkeit — auch wenn sie unangenehm ist, aber meinen Werten entspricht.",
+
+  // Neu ergänzte Sätze
+  "Ich stelle mir den Gedanken auf einem entfernten Bildschirm vor — klein, schwarz-weiß.",
+  "Ich gebe der Geschichte einen Titel: die „keiner mag mich“-Geschichte.",
+  "Ich spreche den Gedanken mit einer lächerlichen Stimme.",
+  "Ich stelle mir vor, wie der Gedanke gesungen wird.",
+  "Ich beobachte meinen Verstand, ohne mit ihm zu verschmelzen.",
+  "Ich drucke den Gedanken gedanklich auf ein T-Shirt.",
+  "Ich gebe der Vorstellung einen ironischen Soundtrack."
 ];
 
-let letzterIndex = -1;
+let letzterSatz = -1;
 
 function neuerSatz() {
-  let idx;
+  let index;
   do {
-    idx = Math.floor(Math.random() * saetze.length);
-  } while (idx === letzterIndex && saetze.length > 1);
-  letzterIndex = idx;
-  document.getElementById('satz').textContent = saetze[idx];
+    index = Math.floor(Math.random() * saetze.length);
+  } while (index === letzterSatz && saetze.length > 1);
+  letzterSatz = index;
+  document.getElementById('satz').textContent = saetze[index];
+  stoppeDenkzeit();
 }
 
+// Denkzeit (60 Sek. Kreis-Countdown)
+let denkzeitInterval = null;
+const DENKZEIT_DAUER = 60;
+const UMFANG = 2 * Math.PI * 50; // ~314
+
+function starteDenkzeit() {
+  const satzText = document.getElementById('satz').textContent;
+  if (!satzText || satzText === 'Tippe auf „Neuer Satz“') {
+    neuerSatz();
+  }
+  stoppeDenkzeit();
+
+  const wrap = document.getElementById('denkzeit-wrap');
+  const fg = document.getElementById('denkzeit-kreis-fg');
+  const text = document.getElementById('denkzeit-text');
+
+  wrap.style.display = 'block';
+  fg.style.strokeDasharray = UMFANG;
+  fg.style.stroke = '#fff';
+
+  let verbleibend = DENKZEIT_DAUER;
+  text.textContent = verbleibend;
+  fg.style.transition = 'none';
+  fg.style.strokeDashoffset = 0;
+
+  // Reflow erzwingen, damit die Transition greift
+  void fg.offsetWidth;
+
+  fg.style.transition = `stroke-dashoffset ${DENKZEIT_DAUER}s linear`;
+  fg.style.strokeDashoffset = UMFANG;
+
+  denkzeitInterval = setInterval(() => {
+    verbleibend--;
+    text.textContent = verbleibend > 0 ? verbleibend : '✓';
+    if (verbleibend <= 0) {
+      clearInterval(denkzeitInterval);
+      denkzeitInterval = null;
+    }
+  }, 1000);
+}
+
+function stoppeDenkzeit() {
+  if (denkzeitInterval) {
+    clearInterval(denkzeitInterval);
+    denkzeitInterval = null;
+  }
+  const wrap = document.getElementById('denkzeit-wrap');
+  const fg = document.getElementById('denkzeit-kreis-fg');
+  wrap.style.display = 'none';
+  fg.style.transition = 'none';
+  fg.style.strokeDashoffset = 0;
+}
+
+// Navigation
+function zeigeHaupt() {
+  document.getElementById('haupt-screen').style.display = 'block';
+  document.getElementById('atem-screen').style.display = 'none';
+}
 function zeigeAtem() {
   document.getElementById('haupt-screen').style.display = 'none';
   document.getElementById('atem-screen').style.display = 'block';
   resetAtem();
 }
 
-function zeigeHaupt() {
-  document.getElementById('atem-screen').style.display = 'none';
-  document.getElementById('haupt-screen').style.display = 'block';
-}
-
+// Atembeobachtung (10 Atemzüge)
 let atemZaehler = 0;
 let atemLaeuft = false;
 
 function resetAtem() {
-  atemZaehler = 0;
   atemLaeuft = false;
+  atemZaehler = 0;
   document.getElementById('kreis').textContent = '0';
   document.getElementById('kreis').classList.remove('ein');
   document.getElementById('zaehltext').textContent = 'Bereit? Tippe auf Start.';
+  document.getElementById('atemBtn').style.display = 'inline-block';
   document.getElementById('atemBtn').textContent = 'Start';
   document.getElementById('atemBtn').onclick = startAtem;
 }
@@ -137,7 +223,7 @@ function atemZyklus() {
     document.getElementById('kreis').classList.remove('ein');
     document.getElementById('atemBtn').style.display = 'inline-block';
     document.getElementById('atemBtn').textContent = 'Nochmal';
-    document.getElementById('atemBtn').onclick = () => { resetAtem(); document.getElementById('atemBtn').style.display='inline-block'; };
+    document.getElementById('atemBtn').onclick = () => { resetAtem(); };
     atemLaeuft = false;
     return;
   }
