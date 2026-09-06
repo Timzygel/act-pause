@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ACT Pause</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    font-family: -apple-system, sans-serif;
+    background: linear-gradient(135deg,#2c3e50,#4a6d8c);
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    text-align: center;
+  }
+  #card {
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 32px 24px;
+    max-width: 380px;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  h2 { font-size: 1.1em; opacity: 0.7; margin-bottom: 16px; font-weight: 400; }
+  p { font-size: 1.3em; line-height: 1.5; }
+  button {
+    margin-top: 32px;
+    background: #fff;
+    color: #2c3e50;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-size: 1em;
+    font-weight: 600;
+  }
+  #timer { margin-top: 12px; font-size: 0.9em; opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<div id="card">
+  <h2 id="label">Kurze ACT-Pause</h2>
+  <p id="text">Tippe auf Start</p>
+  <div id="timer"></div>
+</div>
+<button onclick="neueUebung()">Start</button>
+
+<script>
+const uebungen = [
+  {label:"Defusion", text:"Sag innerlich: 'Ich bemerke, dass ich gerade denke...' – und benenne den Gedanken. Lass ihn wie eine Wolke vorbeiziehen."},
+  {label:"Erdung", text:"Spüre deine Füße auf dem Boden. Drei bewusste Atemzüge. Nimm 3 Dinge wahr, die du siehst."},
+  {label:"Werte-Check", text:"Frage dich: Was ist mir JETZT, in dieser Minute, wirklich wichtig? Nicht was 'sollte' – was zählt für mich?"},
+  {label:"Beobachter-Ich", text:"Stell dir vor, du beobachtest deine Gedanken von außen, wie Schilder, die vorbeifahren. Du bist nicht der Gedanke."},
+  {label:"Akzeptanz", text:"Falls Unruhe da ist: lass sie da sein, ohne sie wegzudrücken. Sie darf bleiben – du musst nicht kämpfen."},
+  {label:"Container-Übung", text:"Stell dir vor, du packst die unerledigte Aufgabe kurz in eine Box. Sie ist sicher verwahrt – du holst sie später wieder raus."},
+  {label:"Hier & Jetzt", text:"Was höre ich gerade? Was rieche ich? Was spüre ich an meiner Haut? Komm für 20 Sekunden ganz an."}
+];
+
+function neueUebung(){
+  const u = uebungen[Math.floor(Math.random()*uebungen.length)];
+  document.getElementById('label').innerText = u.label;
+  document.getElementById('text').innerText = u.text;
+  starteTimer(60);
+}
+
+let intervall;
+function starteTimer(sek){
+  clearInterval(intervall);
+  let t = sek;
+  const el = document.getElementById('timer');
+  el.innerText = t + "s";
+  intervall = setInterval(()=>{
+    t--;
+    el.innerText = t > 0 ? t + "s" : "Fertig ✓";
+    if(t<=0) clearInterval(intervall);
+  },1000);
+}
+</script>
+
+</body>
+</html>
