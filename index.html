@@ -16,7 +16,7 @@
   }
   h1 { font-size: 1.3em; opacity: 0.8; margin-bottom: 20px; font-weight: 300; }
   #satz {
-    font-size: 1.5em; line-height: 1.5; margin: 20px 0 20px;
+    font-size: 1.5em; line-height: 1.5; margin: 20px 0;
     min-height: 120px; display: flex; align-items: center;
     justify-content: center; padding: 0 10px;
   }
@@ -30,16 +30,20 @@
   #haupt-screen, #atem-screen { width: 100%; max-width: 500px; }
   #atem-screen { display: none; }
 
-  /* Denkzeit-Kreis */
-  #denkzeit-wrap { display: none; margin: 10px auto 20px; }
-  #denkzeit-svg { transform: rotate(-90deg); }
-  #denkzeit-kreis-bg { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 6; }
-  #denkzeit-kreis-fg {
-    fill: none; stroke: #fff; stroke-width: 6; stroke-linecap: round;
-    stroke-dasharray: 314; stroke-dashoffset: 0;
+  /* Denkzeit-Fortschrittsbalken */
+  #denkzeit-wrap {
+    display: none; width: 100%; max-width: 320px; margin: 10px auto 25px;
   }
   #denkzeit-text {
-    position: relative; margin-top: -95px; font-size: 1.4em; opacity: 0.9;
+    font-size: 1.1em; opacity: 0.85; margin-bottom: 10px;
+  }
+  #denkzeit-bar-bg {
+    width: 100%; height: 8px; background: rgba(255,255,255,0.15);
+    border-radius: 10px; overflow: hidden;
+  }
+  #denkzeit-bar-fg {
+    height: 100%; width: 100%; background: #fff;
+    border-radius: 10px; transform-origin: left;
   }
 
   #kreis {
@@ -60,11 +64,10 @@
   <div id="satz">Tippe auf „Neuer Satz“</div>
 
   <div id="denkzeit-wrap">
-    <svg id="denkzeit-svg" width="100" height="100" viewBox="0 0 100 100">
-      <circle id="denkzeit-kreis-bg" cx="50" cy="50" r="50"></circle>
-      <circle id="denkzeit-kreis-fg" cx="50" cy="50" r="50"></circle>
-    </svg>
     <div id="denkzeit-text">60</div>
+    <div id="denkzeit-bar-bg">
+      <div id="denkzeit-bar-fg"></div>
+    </div>
   </div>
 
   <div>
@@ -129,10 +132,9 @@ function neuerSatz() {
   stoppeDenkzeit();
 }
 
-// Denkzeit (60 Sek. Kreis-Countdown)
+// Denkzeit (60 Sek. Fortschrittsbalken)
 let denkzeitInterval = null;
 const DENKZEIT_DAUER = 60;
-const UMFANG = 2 * Math.PI * 50; // ~314
 
 function starteDenkzeit() {
   const satzText = document.getElementById('satz').textContent;
@@ -142,23 +144,20 @@ function starteDenkzeit() {
   stoppeDenkzeit();
 
   const wrap = document.getElementById('denkzeit-wrap');
-  const fg = document.getElementById('denkzeit-kreis-fg');
+  const bar = document.getElementById('denkzeit-bar-fg');
   const text = document.getElementById('denkzeit-text');
 
   wrap.style.display = 'block';
-  fg.style.strokeDasharray = UMFANG;
-  fg.style.stroke = '#fff';
 
   let verbleibend = DENKZEIT_DAUER;
   text.textContent = verbleibend;
-  fg.style.transition = 'none';
-  fg.style.strokeDashoffset = 0;
 
-  // Reflow erzwingen, damit die Transition greift
-  void fg.offsetWidth;
+  bar.style.transition = 'none';
+  bar.style.transform = 'scaleX(1)';
+  void bar.offsetWidth; // Reflow erzwingen
 
-  fg.style.transition = `stroke-dashoffset ${DENKZEIT_DAUER}s linear`;
-  fg.style.strokeDashoffset = UMFANG;
+  bar.style.transition = `transform ${DENKZEIT_DAUER}s linear`;
+  bar.style.transform = 'scaleX(0)';
 
   denkzeitInterval = setInterval(() => {
     verbleibend--;
@@ -176,10 +175,10 @@ function stoppeDenkzeit() {
     denkzeitInterval = null;
   }
   const wrap = document.getElementById('denkzeit-wrap');
-  const fg = document.getElementById('denkzeit-kreis-fg');
+  const bar = document.getElementById('denkzeit-bar-fg');
   wrap.style.display = 'none';
-  fg.style.transition = 'none';
-  fg.style.strokeDashoffset = 0;
+  bar.style.transition = 'none';
+  bar.style.transform = 'scaleX(1)';
 }
 
 // Navigation
